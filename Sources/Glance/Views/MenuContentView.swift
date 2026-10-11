@@ -2,43 +2,57 @@ import SwiftUI
 
 struct MenuContentView: View {
     @EnvironmentObject private var store: TickerStore
-    // Plain ObservableObject instead of @State: @State is a macro in the macOS 27 SDK and its
-    // plugin ships only with full Xcode, so this keeps the project buildable with Command Line Tools.
-    @StateObject private var form = SymbolForm()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            header
+            tickerList
             Divider()
-            symbolInput
-            favoritesList
+            SymbolSearchView(search: store.search)
+            FavoritesView()
             Divider()
             HStack {
-                Text("Data: Binance").font(.caption).foregroundStyle(.secondary)
+                Text("Data: " + (store.activeExchanges.isEmpty ? [Exchange.default] : store.activeExchanges)
+                    .map(\.displayName).joined(separator: ", "))
+                    .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
             }
         }
         .padding(14)
-        .frame(width: 280)
+        .frame(width: 300)
     }
 
-    private var header: some View {
+    private var tickerList: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if store.instruments.isEmpty {
+                Text("No symbols shown. Add one below or pick a favorite.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            ForEach(Array(store.instruments.enumerated()), id: \.element) { index, inst in
+                if index > 0 { Divider().opacity(0.5) }
+                tickerRow(inst, index: index)
+            }
+        }
+    }
+
+    private func tickerRow(_ inst: Instrument, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(store.instrument.tvSymbol).font(.headline)
-                Text(store.instrument.market == .perp ? "PERP" : "SPOT")
+            HStack(spacing: 6) {
+                Text(inst.tvSymbol).font(.headline)
+                Text("\(inst.exchange.displayName) · \(inst.market == .perp ? "PERP" : "SPOT")")
                     .font(.caption2.bold())
                     .padding(.horizontal, 5).padding(.vertical, 1)
                     .background(.quaternary, in: Capsule())
+                favoriteButton(inst)
                 Spacer()
-                statusDot
+                statusDot(store.statuses[inst] ?? .connecting)
+                rowControls(inst, index: index)
             }
-            if let t = store.ticker {
+            if let t = store.tickers[inst] {
                 HStack(alignment: .firstTextBaseline) {
                     Text(PriceFormatter.price(t.close))
-                        .font(.system(size: 26, weight: .semibold).monospacedDigit())
+                        .font(.system(size: store.instruments.count > 1 ? 20 : 26, weight: .semibold).monospacedDigit())
                     Text(PriceFormatter.percent(t.changePercent))
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(t.changePercent >= 0 ? .green : .red)
@@ -50,57 +64,49 @@ struct MenuContentView: View {
                         stat("Vol", PriceFormatter.compact(t.quoteVolume))
                     }
                 }
+            } else if store.statuses[inst] == .unsupported {
+                Text("\(inst.exchange.displayName) isn't supported yet.")
+                    .font(.caption).foregroundStyle(.secondary)
             } else {
                 ProgressView().controlSize(.small)
             }
         }
     }
 
-    private var symbolInput: some View {
-        HStack {
-            TextField("Symbol, e.g. BTCUSDC.P", text: $form.input)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit(submit)
-                .border(form.inputError ? Color.red : .clear)
-            Button("Go", action: submit)
+    private func rowControls(_ inst: Instrument, index: Int) -> some View {
+        HStack(spacing: 2) {
+            if store.instruments.count > 1 {
+                Button { store.move(inst, by: -1) } label: { Image(systemName: "chevron.up") }
+                    .disabled(index == 0)
+                    .help("Move left in menu bar")
+                Button { store.move(inst, by: 1) } label: { Image(systemName: "chevron.down") }
+                    .disabled(index == store.instruments.count - 1)
+                    .help("Move right in menu bar")
+            }
+            Button { store.remove(inst) } label: { Image(systemName: "xmark.circle.fill") }
+                .help("Remove")
         }
+        .buttonStyle(.borderless)
+        .imageScale(.small)
+        .foregroundStyle(.secondary)
     }
 
-    private var favoritesList: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text("Favorites").font(.caption).foregroundStyle(.secondary)
-                Spacer()
-                Button {
-                    store.toggleFavorite(store.instrument)
-                } label: {
-                    Image(systemName: store.favorites.contains(store.instrument) ? "star.fill" : "star")
-                }
-                .buttonStyle(.borderless)
-                .help("Toggle current symbol in favorites")
-            }
-            ForEach(store.favorites) { inst in
-                Button {
-                    store.select(inst)
-                } label: {
-                    HStack {
-                        Text(inst.tvSymbol)
-                        Spacer()
-                        if inst == store.instrument { Image(systemName: "checkmark") }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .padding(.vertical, 3)
-            }
+    private func favoriteButton(_ inst: Instrument) -> some View {
+        let isFavorite = store.favorites.contains(inst)
+        return Button { store.toggleFavorite(inst) } label: {
+            Image(systemName: isFavorite ? "star.fill" : "star")
+                .foregroundStyle(isFavorite ? Color.yellow : .secondary)
         }
+        .buttonStyle(.borderless)
+        .help(isFavorite ? "Remove from favorites" : "Add to favorites")
     }
 
-    private var statusDot: some View {
-        let (color, label): (Color, String) = switch store.status {
+    private func statusDot(_ status: ConnectionStatus) -> some View {
+        let (color, label): (Color, String) = switch status {
         case .live: (.green, "Live")
         case .connecting: (.yellow, "Connecting")
         case .reconnecting(let s): (.orange, "Retry in \(s)s")
+        case .unsupported: (.gray, "Unsupported")
         }
         return HStack(spacing: 4) {
             Circle().fill(color).frame(width: 7, height: 7)
@@ -114,19 +120,4 @@ struct MenuContentView: View {
             Text(value).font(.caption.monospacedDigit())
         }
     }
-
-    private func submit() {
-        guard let inst = Instrument(tvSymbol: form.input) else {
-            form.inputError = true
-            return
-        }
-        form.inputError = false
-        form.input = ""
-        store.select(inst)
-    }
-}
-
-final class SymbolForm: ObservableObject {
-    @Published var input = ""
-    @Published var inputError = false
 }

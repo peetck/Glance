@@ -1,7 +1,7 @@
 import Foundation
 
-/// Binance `<symbol>@miniTicker` payload (same shape for spot and futures).
-struct MiniTicker: Decodable {
+/// 24h rolling price stats for one instrument, common to all exchanges.
+struct MiniTicker {
     let symbol: String
     let close: Double
     let open: Double
@@ -10,7 +10,11 @@ struct MiniTicker: Decodable {
     let quoteVolume: Double
 
     var changePercent: Double { open == 0 ? 0 : (close - open) / open * 100 }
+}
 
+/// Decodes Binance's `<symbol>@miniTicker` payload (same shape for spot and futures).
+/// Other providers build `MiniTicker` with the memberwise initializer.
+extension MiniTicker: Decodable {
     enum CodingKeys: String, CodingKey {
         case symbol = "s", close = "c", open = "o", high = "h", low = "l", quoteVolume = "q"
     }
@@ -24,12 +28,14 @@ struct MiniTicker: Decodable {
             }
             return v
         }
-        symbol = try c.decode(String.self, forKey: .symbol)
-        close = try num(.close)
-        open = try num(.open)
-        high = try num(.high)
-        low = try num(.low)
-        quoteVolume = try num(.quoteVolume)
+        self.init(
+            symbol: try c.decode(String.self, forKey: .symbol),
+            close: try num(.close),
+            open: try num(.open),
+            high: try num(.high),
+            low: try num(.low),
+            quoteVolume: try num(.quoteVolume)
+        )
     }
 }
 
@@ -37,4 +43,6 @@ enum ConnectionStatus: Equatable {
     case connecting
     case live
     case reconnecting(in: Int)
+    /// No provider for the instrument's exchange yet.
+    case unsupported
 }

@@ -2,7 +2,7 @@ import Foundation
 
 /// Streams `miniTicker` updates for one instrument over a Binance WebSocket,
 /// reconnecting with exponential backoff.
-final class BinanceStream {
+final class BinanceStream: TickerStream {
     private var task: Task<Void, Never>?
     private static let silenceTimeout: TimeInterval = 15
 

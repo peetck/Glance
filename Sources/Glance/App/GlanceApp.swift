@@ -10,8 +10,13 @@ struct GlanceApp: App {
             MenuContentView()
                 .environmentObject(store)
         } label: {
-            Text(store.menuBarTitle)
-                .monospacedDigit()
+            if store.instruments.isEmpty {
+                // Nothing selected: keep a small icon so the dropdown stays reachable.
+                Image(systemName: "chart.line.uptrend.xyaxis")
+            } else {
+                Text(store.menuBarTitle)
+                    .monospacedDigit()
+            }
         }
         .menuBarExtraStyle(.window)
     }
