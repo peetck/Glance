@@ -4,7 +4,12 @@ macOS menu bar app (SwiftUI `MenuBarExtra`) that streams Binance prices. README.
 
 ## Verify every change
 - Run `swift build` after each edit. It must finish with no errors. You can ignore the two `ld: warning: search path ... not found` lines.
-- Run `./scripts/bundle.sh` → `build/Glance.app` only when a real .app is needed (e.g. testing `Info.plist`/`LSUIElement` behavior).
+- Run `./scripts/bundle.sh` → `build/Glance.app` only when a real .app is needed (e.g. testing `Info.plist`/`LSUIElement` behavior). It builds arm64 and x86_64 separately and `lipo`s them; don't switch to a single multi-arch `swift build`, which needs full Xcode.
+
+## Releases
+- Bundle ID is `com.peetck.Glance`. Don't change it: macOS keys saved settings by it.
+- Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds with `VERSION=<tag without v>` and publishes a GitHub Release. The app is ad-hoc signed, not notarized.
+- User-facing changes get a line under **Unreleased** in CHANGELOG.md.
 
 ## Toolchain: Command Line Tools only, no full Xcode
 - **Do not use Swift macros**: `@State`, `@Observable`, `@Bindable`, `#Preview`, etc. The macro plugins ship only with full Xcode, so the build fails.

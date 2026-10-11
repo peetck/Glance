@@ -6,6 +6,12 @@
 
 <p align="center">Real-time crypto prices in your macOS menu bar. Just glance up.</p>
 
+<p align="center">
+  <a href="https://github.com/peetck/Glance/releases/latest"><b>Download the latest release</b></a>
+  ·
+  <a href="LICENSE">MIT License</a>
+</p>
+
 Glance is a small menu bar app, like RunCat or Stats, that streams live prices from Binance.
 
 ## Features
@@ -18,17 +24,41 @@ Glance is a small menu bar app, like RunCat or Stats, that streams live prices f
 - **Auto-reconnect** with exponential backoff and a watchdog for silent sockets.
 - **Ready for more exchanges:** a source picker and provider protocol are in place. Bybit, OKX, Hyperliquid, and Coinbase are listed as coming soon.
 
-## Run
+## Install
+
+Requires macOS 14 (Sonoma) or later. Works on Apple silicon and Intel Macs.
+
+1. Download `Glance-vX.Y.Z.zip` from the [latest release](https://github.com/peetck/Glance/releases/latest) and unzip it.
+2. Move `Glance.app` to your **Applications** folder.
+3. Open it. Glance appears in the menu bar, not the Dock.
+
+**"Glance can't be opened because Apple cannot check it for malicious software."**
+Glance isn't signed with a paid Apple Developer ID yet, so macOS blocks it the first time. Pick one:
+
+- Open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to the Glance message. Then open the app again.
+- Or run this once in Terminal:
+
+  ```sh
+  xattr -dr com.apple.quarantine /Applications/Glance.app
+  ```
+
+If you'd rather not trust a downloaded binary, build it yourself (below). It takes about a minute.
+
+To quit, open the dropdown and click **Quit** (or press ⌘Q while it's open).
+
+## Build from source
 
 ```sh
+git clone https://github.com/peetck/Glance.git
+cd Glance
 swift run                 # dev (quick iterate)
-./scripts/bundle.sh       # → build/Glance.app (menu-bar only, no Dock icon)
+./scripts/bundle.sh       # → build/Glance.app (universal, with icon; menu-bar only, no Dock icon)
 open build/Glance.app
 ```
 
-Needs only the Xcode Command Line Tools and macOS 14 or later. If you install full Xcode, you can open `Package.swift` in it.
+Needs only the Xcode Command Line Tools (`xcode-select --install`) and macOS 14 or later. If you install full Xcode, you can open `Package.swift` in it.
 
-Working on this with an AI agent? Read [AGENTS.md](AGENTS.md) first. It covers the toolchain limits (no Swift macros) and how to add an exchange.
+Want to contribute? See [CONTRIBUTING.md](CONTRIBUTING.md). Working on this with an AI agent? Read [AGENTS.md](AGENTS.md) first. It covers the toolchain limits (no Swift macros) and how to add an exchange.
 
 ## Layout
 
@@ -48,7 +78,9 @@ Sources/Glance/
   Views/FavoritesView.swift     Favorite chips: click to show, drag to reorder
 assets/
   glance-icon.svg               App icon source (edit this)
-  glance-icon.png               1024×1024 render
+  glance-icon.png               1024×1024 render (bundle.sh turns it into AppIcon.icns)
+scripts/bundle.sh               Universal release build → build/Glance.app
+.github/workflows/              CI build on every push/PR; release on `v*` tags
 ```
 
 ## Roadmap
@@ -61,4 +93,12 @@ Phases 1 and 4 are done; 2 and 5 are mostly done.
 4. **Multi-ticker (done):** up to 5 symbols side by side in the menu bar, one WebSocket per symbol.
 5. **More exchanges:** the `MarketDataProvider` protocol, source picker, and `EXCHANGE:SYMBOL` parsing are in place. Still to do: Bybit, OKX, Hyperliquid, and Coinbase providers.
 6. **Sparkline and alerts:** a mini chart in the dropdown from `@kline_1m`, and price-cross alerts through `UserNotifications`.
-7. **Ship it:** Settings window, launch at login (`SMAppService.mainApp`), app icon (artwork done in `assets/`; still needs an `.icns` in the bundle), Developer ID signing and notarization, Sparkle auto-updates.
+7. **Ship it:** Settings window, launch at login (`SMAppService.mainApp`), Developer ID signing and notarization, Sparkle auto-updates. Done so far: app icon, universal build, and automated GitHub Releases.
+
+## Disclaimer
+
+Glance is an independent project. It isn't affiliated with, endorsed by, or sponsored by Binance or any other exchange. It uses their public market data APIs. Prices may be delayed or wrong, so don't use Glance as your only source for trading decisions. Nothing here is financial advice.
+
+## License
+
+[MIT](LICENSE) © 2026 peetck
