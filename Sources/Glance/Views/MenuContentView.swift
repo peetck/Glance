@@ -2,9 +2,11 @@ import SwiftUI
 
 struct MenuContentView: View {
     @EnvironmentObject private var store: TickerStore
+    @EnvironmentObject private var updater: Updater
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            UpdateBanner(updater: updater)
             tickerList
             Divider()
             SymbolSearchView(search: store.search)
@@ -15,12 +17,28 @@ struct MenuContentView: View {
                     .map(\.displayName).joined(separator: ", "))
                     .font(.caption).foregroundStyle(.secondary)
                 Spacer()
+                settingsMenu
                 Button("Quit") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
             }
         }
         .padding(14)
         .frame(width: 300)
+    }
+
+    private var settingsMenu: some View {
+        Menu {
+            Button("Check for Updates…") { Task { await updater.checkForUpdates() } }
+            Toggle("Check for Updates Automatically", isOn: $updater.checksAutomatically)
+            Divider()
+            Text("Glance \(updater.currentVersion ?? "dev build")")
+        } label: {
+            Image(systemName: "gearshape")
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Settings")
     }
 
     private var tickerList: some View {

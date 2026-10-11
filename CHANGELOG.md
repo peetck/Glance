@@ -4,6 +4,14 @@ All notable changes to Glance. Versions follow [Semantic Versioning](https://sem
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-12
+
+### Added
+- Auto-update: checks GitHub Releases daily (can be turned off in ⚙︎), downloads the new version, and relaunches. Also available as ⚙︎ → Check for Updates….
+
+### Changed
+- Releases are now a drag-to-install `.dmg` instead of a `.zip`.
+
 ## [0.2.0] - 2026-10-12
 
 ### Added

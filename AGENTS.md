@@ -8,8 +8,9 @@ macOS menu bar app (SwiftUI `MenuBarExtra`) that streams Binance prices. README.
 
 ## Releases
 - Bundle ID is `com.peetck.Glance`. Don't change it: macOS keys saved settings by it.
-- Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds with `VERSION=<tag without v>` and publishes a GitHub Release. The app is ad-hoc signed, not notarized.
+- Pushing a `v*` tag runs `.github/workflows/release.yml`, which builds with `VERSION=<tag without v>`, packages a `.dmg`, and publishes a GitHub Release. The app is ad-hoc signed, not notarized.
 - User-facing changes get a line under **Unreleased** in CHANGELOG.md.
+- Auto-update (`Services/Updater.swift`) reads `api.github.com/repos/peetck/Glance/releases/latest`. It relies on: the tag being `v<CFBundleShortVersionString>`, a `Glance*.dmg` asset (made by `scripts/dmg.sh`) with `Glance.app` at its root, and an unchanged bundle ID. Keep those when touching the release workflow or `bundle.sh`.
 
 ## Toolchain: Command Line Tools only, no full Xcode
 - **Do not use Swift macros**: `@State`, `@Observable`, `@Bindable`, `#Preview`, etc. The macro plugins ship only with full Xcode, so the build fails.
