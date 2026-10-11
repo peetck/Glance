@@ -4,6 +4,8 @@ All notable changes to Glance. Versions follow [Semantic Versioning](https://sem
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-12
+
 ### Added
 - Show up to 5 tickers at once in the menu bar, or none.
 - Search as you type across all trading Binance spot and perp symbols.
