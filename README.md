@@ -1,7 +1,22 @@
-# Glance
+<p align="center">
+  <img src="assets/glance-icon.png" width="160" alt="Glance icon: a lopsided emoji glancing up at the menu bar">
+</p>
 
-A macOS menu bar app that shows a real-time crypto price, like RunCat or Stats.
-You enter symbols in TradingView format (`BTCUSDC.P` = Binance USDⓈ-M perpetual, `BTCUSDT` = spot).
+<h1 align="center">Glance</h1>
+
+<p align="center">Real-time crypto prices in your macOS menu bar. Just glance up.</p>
+
+Glance is a small menu bar app, like RunCat or Stats, that streams live prices from Binance.
+
+## Features
+
+- **Up to 5 tickers at once,** side by side in the menu bar (`BTC 62,431.5 ▲  ETH 2,412.300 ▼`). You can also show none; the menu bar then shows a small icon.
+- **Search as you type** across every trading Binance spot and perp symbol, ranked by popularity. No button press needed.
+- **TradingView notation:** `BTCUSDC.P` = USDⓈ-M perpetual, `BTCUSDT` = spot. `BINANCE:ETHUSDT.P` and `BTC/USDC.P` also work.
+- **Favorites:** star a shown symbol, then click its chip to show or hide it, and drag chips to reorder.
+- **Per-ticker details** in the dropdown: price, 24h change, high, low, volume, and connection status. You can reorder tickers in the menu bar.
+- **Auto-reconnect** with exponential backoff and a watchdog for silent sockets.
+- **Ready for more exchanges:** a source picker and provider protocol are in place. Bybit, OKX, Hyperliquid, and Coinbase are listed as coming soon.
 
 ## Run
 
@@ -13,26 +28,37 @@ open build/Glance.app
 
 Needs only the Xcode Command Line Tools and macOS 14 or later. If you install full Xcode, you can open `Package.swift` in it.
 
+Working on this with an AI agent? Read [AGENTS.md](AGENTS.md) first. It covers the toolchain limits (no Swift macros) and how to add an exchange.
+
 ## Layout
 
 ```
 Sources/Glance/
   App/GlanceApp.swift           MenuBarExtra scene + accessory activation policy
+  Models/Exchange.swift         Data sources (Binance live; others listed as coming soon)
   Models/Instrument.swift       TradingView symbol parsing (BTCUSDC.P, BINANCE:ETHUSDT.P, BTC/USDC.P)
-  Models/Ticker.swift           Binance miniTicker decoding, connection status
+  Models/Ticker.swift           Common 24h ticker model (+ Binance decoding), connection status
+  Services/MarketDataProvider.swift  Provider protocol + registry; add an exchange here
+  Services/BinanceProvider.swift     Binance symbol list for search
   Services/BinanceStream.swift  WebSocket client with exponential-backoff reconnect
   Services/TickerStore.swift    App state, persistence (UserDefaults), price formatting
-  Views/MenuContentView.swift   Dropdown: price, 24h stats, symbol input, favorites
+  Services/SymbolDirectory.swift  Symbol list (24h tickers), ranked search, debounced search-as-you-type
+  Views/MenuContentView.swift   Dropdown: per-symbol price and 24h stats, remove/reorder, favorites
+  Views/SymbolSearchView.swift  Source picker + search field with live results
+  Views/FavoritesView.swift     Favorite chips: click to show, drag to reorder
+assets/
+  glance-icon.svg               App icon source (edit this)
+  glance-icon.png               1024×1024 render
 ```
 
 ## Roadmap
 
-See the implementation plan below. Phase 1 is done.
+Phases 1 and 4 are done; 2 and 5 are mostly done.
 
-1. **MVP (done):** one symbol in the menu bar, Binance spot and perp over WebSocket, auto-reconnect, favorites, persistence.
-2. **Symbol search:** fetch `exchangeInfo` from the spot and futures REST APIs, cache it, and fuzzy-search it with autocomplete. Use `tickSize` for exact decimal places.
+1. **MVP (done):** a symbol in the menu bar, Binance spot and perp over WebSocket, auto-reconnect, favorites, persistence.
+2. **Symbol search (mostly done):** search-as-you-type over all trading spot and perp symbols (from the 24h ticker endpoints, cached 5 min). Still to do: use `tickSize` for exact decimal places.
 3. **Menu bar polish:** green/red colored text (render an `NSAttributedString` through `NSStatusItem`, because `MenuBarExtra` labels draw as monochrome templates), an option to flash on price change, and display modes (price, price and %, compact).
-4. **Multi-ticker:** rotate symbols, or show 2–3 at once by combining streams (`/stream?streams=a@miniTicker/b@miniTicker`).
-5. **More exchanges:** a `PriceProvider` protocol with Bybit, OKX, Hyperliquid, and Coinbase implementations. Parse `EXCHANGE:SYMBOL` prefixes.
+4. **Multi-ticker (done):** up to 5 symbols side by side in the menu bar, one WebSocket per symbol.
+5. **More exchanges:** the `MarketDataProvider` protocol, source picker, and `EXCHANGE:SYMBOL` parsing are in place. Still to do: Bybit, OKX, Hyperliquid, and Coinbase providers.
 6. **Sparkline and alerts:** a mini chart in the dropdown from `@kline_1m`, and price-cross alerts through `UserNotifications`.
-7. **Ship it:** Settings window, launch at login (`SMAppService.mainApp`), app icon, Developer ID signing and notarization, Sparkle auto-updates.
+7. **Ship it:** Settings window, launch at login (`SMAppService.mainApp`), app icon (artwork done in `assets/`; still needs an `.icns` in the bundle), Developer ID signing and notarization, Sparkle auto-updates.
