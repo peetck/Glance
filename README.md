@@ -16,7 +16,7 @@ Glance is a small menu bar app, like RunCat or Stats, that streams live prices f
 
 ## Features
 
-- **Up to 5 tickers at once,** side by side in the menu bar (`BTC 62,431.5 ▲  ETH 2,412.300 ▼`). You can also show none; the menu bar then shows a small icon.
+- **Up to 5 tickers at once,** side by side in the menu bar (`BTC 62,431.50 ▲  ETH 2,412.30 ▼`). You can also show none; the menu bar then shows a small icon.
 - **Search as you type** across every trading Binance spot and perp symbol, ranked by popularity. No button press needed.
 - **TradingView notation:** `BTCUSDC.P` = USDⓈ-M perpetual, `BTCUSDT` = spot. `BINANCE:ETHUSDT.P` and `BTC/USDC.P` also work.
 - **Favorites:** star a shown symbol, then click its chip to show or hide it, and drag chips to reorder.

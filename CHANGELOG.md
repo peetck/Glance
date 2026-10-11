@@ -4,6 +4,12 @@ All notable changes to Glance. Versions follow [Semantic Versioning](https://sem
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
+### Changed
+- Prices show 2 decimals (62,431.50). Prices below 1 keep 4 significant digits so small coins stay readable.
+- Removed the "Data: Binance" label from the dropdown footer.
+
 ## [0.3.0] - 2026-10-12
 
 ### Added

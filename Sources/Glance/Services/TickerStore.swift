@@ -44,11 +44,6 @@ final class TickerStore: ObservableObject {
         .joined(separator: "  ")
     }
 
-    /// Exchanges behind the shown symbols, for the "Data:" credit.
-    var activeExchanges: [Exchange] {
-        Exchange.allCases.filter { ex in instruments.contains { $0.exchange == ex } }
-    }
-
     func contains(_ instrument: Instrument) -> Bool { instruments.contains(instrument) }
 
     /// Adds a symbol to the display. Returns false if it is already shown or the limit is reached.
@@ -146,14 +141,13 @@ final class TickerStore: ObservableObject {
 }
 
 enum PriceFormatter {
+    /// Two decimals (62,431.50). Below 1, two decimals would round small coins (PEPE ≈ 0.00001)
+    /// to 0.00, so those keep 4 significant digits instead.
     static func price(_ value: Double) -> String {
-        let decimals: Int
-        switch abs(value) {
-        case 1000...: decimals = 1
-        case 1..<1000: decimals = 3
-        default: decimals = 6
+        if value == 0 || abs(value) >= 1 {
+            return value.formatted(.number.precision(.fractionLength(2)).grouping(.automatic))
         }
-        return value.formatted(.number.precision(.fractionLength(decimals)).grouping(.automatic))
+        return value.formatted(.number.precision(.significantDigits(4)))
     }
 
     static func percent(_ value: Double) -> String {

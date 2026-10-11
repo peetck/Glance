@@ -13,9 +13,6 @@ struct MenuContentView: View {
             FavoritesView()
             Divider()
             HStack {
-                Text("Data: " + (store.activeExchanges.isEmpty ? [Exchange.default] : store.activeExchanges)
-                    .map(\.displayName).joined(separator: ", "))
-                    .font(.caption).foregroundStyle(.secondary)
                 Spacer()
                 settingsMenu
                 Button("Quit") { NSApp.terminate(nil) }
